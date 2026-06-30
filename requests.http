@@ -1,0 +1,19 @@
+###
+
+GET http://localhost:5000/
+
+
+###
+
+POST http://127.0.0.1:5000/login
+content-type: application/json
+
+{
+    "username": "admin",
+    "password": "supersecret"
+}
+
+### 
+
+POST http://127.0.0.1:5000/products
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJleHAiOjE3ODI4MzM3ODl9.qIJrS5jw8vMKb5VMVLKiCD3Px-FtvsmDj4Q00Zdh7NQ
