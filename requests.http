@@ -1,4 +1,4 @@
-@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJleHAiOjE3ODI5MDk0ODV9.6bKFbHhnXCtkhdoks0xyeLm_MLxFY3gnnGhRhSiHrzM
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJleHAiOjE3ODI5MTI0MzN9.B1IyuoCiY1Bl3LhIT5e-JGJu-ME5D5DKFQohdcr2Whk
 
 ###
 
@@ -71,3 +71,15 @@ DELETE http://127.0.0.1:5000/products/6a4503b8047be8874058c177
 Authorization: Bearer {{token}}
 Content-Type: application/json
 
+###
+
+POST http://127.0.0.1:5000/sales/upload
+Authorization: Bearer {{token}}
+Content-Type: multipart/form-data; boundary=WebAppBoundary
+
+--WebAppBoundary
+Content-Disposition: form-data; name="file"; filename="sales.csv"
+Content-Type: text/csv
+
+< ./sales.csv
+--WebAppBoundary--

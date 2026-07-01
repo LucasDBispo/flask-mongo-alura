@@ -1,3 +1,5 @@
+import csv
+import io
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -8,7 +10,8 @@ from pydantic import ValidationError
 from app import db
 from app.decorators import token_required
 from app.models.products import Product, ProductDBModel, UpdateProduct
-from app.models.user import LoginPayload
+from app.models.sales import Sale
+from app.models.users import LoginPayload
 
 # o blueprint organiza as rotas, o jsonify converte os dicts para json
 
@@ -132,8 +135,49 @@ def delete_product(token, product_id):
 
 # RF7: O sistema deve permitir a importação de vendas através de um arquivo
 @main_bp.route("/sales/upload", methods=["POST"])
-def upload_sales():
-    return jsonify({"message": "Esta é a rota de upload de um arquivo de vendas"})
+@token_required
+def upload_sales(token):
+    if "file" not in request.files:
+        return jsonify({"error": "Nenhum arquivo enviado"}), 400
+
+    file = request.files["file"]
+
+    if file.filename == "":
+        return jsonify({"error": "Nenhum arquivo selecionado"}), 400
+
+    if file and file.filename.endswith(".csv"):
+        csv_stream = io.StringIO(file.stream.read().decode("utf-8"), newline=None)
+        csv_reader = csv.DictReader(csv_stream)
+
+        sales_to_insert = []
+        error = []
+
+        for row_num, row in enumerate(csv_reader, start=1):
+            try:
+                sale_data = Sale(**row)
+
+                sales_to_insert.append(sale_data.model_dump(mode="json"))
+            except ValidationError as e:
+                error.append(
+                    f"Linha {row_num} com dados inválidos. Erros: {e.errors()}"
+                )
+            except Exception as e:
+                error.append(f"Linha {row_num} com erro inesperado: {str(e)}")
+
+        if sales_to_insert:
+            try:
+                db.sales.insert_many(sales_to_insert)
+            except Exception as e:
+                return jsonify(
+                    {"error": f"Erro ao inserir vendas no banco de dados: {str(e)}"}
+                ), 500
+    return jsonify(
+        {
+            "message": "Upload realizado com sucesso",
+            "vendas_importadas": len(sales_to_insert),
+            "erros_encontrados": error,
+        }
+    ), 200
 
 
 @main_bp.route("/")
