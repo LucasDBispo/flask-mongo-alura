@@ -1,3 +1,5 @@
+@token = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJleHAiOjE3ODI5MDk0ODV9.6bKFbHhnXCtkhdoks0xyeLm_MLxFY3gnnGhRhSiHrzM
+
 ###
 
 GET http://localhost:5000/
@@ -13,7 +15,59 @@ content-type: application/json
     "password": "supersecret"
 }
 
+###
+
+GET http://127.0.0.1:5000/products
+Authorization: Bearer {{token}}
+content-type: application/json
+
+
+
+### 
+GET http://127.0.0.1:5000/products/6a44fc6dc9fd53ef0d8fcd40
+Authorization: Bearer {{token}}
+content-type: application/json
+
 ### 
 
 POST http://127.0.0.1:5000/products
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjoiYWRtaW4iLCJleHAiOjE3ODI4MzM3ODl9.qIJrS5jw8vMKb5VMVLKiCD3Px-FtvsmDj4Q00Zdh7NQ
+Authorization: Bearer {{token}}
+content-type: application/json
+
+{
+"name": "Notebook Gamer Pro X15",
+"price": 9500.50,
+"description":"Notebook de alta performance com 32GB de RAM, SSD de 1TB e placa de vídeo dedicada de 8GB.",
+"stock": 15
+}
+
+
+###
+
+POST http://127.0.0.1:5000/products
+Authorization: Bearer {{token}}
+content-type: application/json
+
+{
+"name": "Produto para exclusão",
+"price": 10.00,
+"description":"Produto que será excluído em breve.",
+"stock": 4
+}
+
+###
+
+PUT http://127.0.0.1:5000/products/6a44fc6dc9fd53ef0d8fcd40
+Authorization: Bearer {{token}}
+content-type: application/json
+
+{
+    "name": "Notebook Gamer Pro X15"
+}   
+
+###
+
+DELETE http://127.0.0.1:5000/products/6a4503b8047be8874058c177
+Authorization: Bearer {{token}}
+Content-Type: application/json
+

@@ -1,23 +1,53 @@
-from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
+
 from bson import ObjectId
+from pydantic import BaseModel, ConfigDict, Field
+
 
 class Product(BaseModel):
-    id: Optional[ObjectId] = Field(None,alias='_id')
+    id: Optional[ObjectId] = Field(None, alias="_id")
     name: str
     price: float
     description: Optional[str] = None
-    stock: int 
-    sku: str
+    stock: int
 
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True
-    )
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)
+
 
 class ProductDBModel(Product):
-    def model_dump(self, *, mode='python', include=None, exclude=None, context=None, by_alias=None, exclude_unset=False, exclude_defaults=False, exclude_none=False, round_trip=False):
-        data = super().model_dump(mode=mode, include=include, exclude=exclude, context=context, by_alias=by_alias, exclude_unset=exclude_unset, exclude_defaults=exclude_defaults, exclude_none=exclude_none, round_trip=round_trip)
+    def model_dump(
+        self,
+        *,
+        mode="python",
+        include=None,
+        exclude=None,
+        context=None,
+        by_alias=None,
+        exclude_unset=False,
+        exclude_defaults=False,
+        exclude_none=False,
+        round_trip=False,
+    ):
+        data = super().model_dump(
+            mode=mode,
+            include=include,
+            exclude=exclude,
+            context=context,
+            by_alias=by_alias,
+            exclude_unset=exclude_unset,
+            exclude_defaults=exclude_defaults,
+            exclude_none=exclude_none,
+            round_trip=round_trip,
+        )
         if self.id:
             data["_id"] = str(data["_id"])
         return data
+
+
+class UpdateProduct(BaseModel):
+    name: Optional[str] = None
+    price: Optional[float] = None
+    description: Optional[str] = None
+    stock: Optional[int] = None
+
+    model_config = ConfigDict(populate_by_name=True, arbitrary_types_allowed=True)

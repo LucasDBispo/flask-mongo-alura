@@ -7,7 +7,7 @@ from pydantic import ValidationError
 
 from app import db
 from app.decorators import token_required
-from app.models.products import ProductDBModel
+from app.models.products import Product, ProductDBModel, UpdateProduct
 from app.models.user import LoginPayload
 
 # o blueprint organiza as rotas, o jsonify converte os dicts para json
@@ -59,13 +59,23 @@ def get_products():
 # RF3: O sistema deve permitir a criação de um novo produto
 @main_bp.route("/products", methods=["POST"])
 @token_required
-def create_product():
-    return jsonify({"message": "Esta é a rota de criação de produto"})
+def create_product(token):
+    try:
+        product = Product(**request.get_json())
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+
+    result = db.products.insert_one(product.model_dump())
+    # Lógica para criar o produto no banco de dados
+    return jsonify(
+        {"message": "Produto criado com sucesso!", "id": str(result.inserted_id)}
+    ), 201
 
 
 # RF4: O sistema deve permitir a visualização dos detalhes de um único produto
 @main_bp.route("/products/<string:product_id>", methods=["GET"])
-def get_product_by_id(product_id):
+@token_required
+def get_product_by_id(token, product_id):
     try:
         oid = ObjectId(product_id)
     except Exception as e:
@@ -81,19 +91,43 @@ def get_product_by_id(product_id):
 
 
 # RF5: O sistema deve permitr a atualização de um único produto e produto existente
-@main_bp.route("/products/<int:product_id>", methods=["PUT"])
-def update_product():
+@main_bp.route("/products/<string:product_id>", methods=["PUT"])
+@token_required
+def update_product(token, product_id):
+    try:
+        oid = ObjectId(product_id)
+        update_data = UpdateProduct(**request.get_json())
+    except ValidationError as e:
+        return jsonify({"error": e.errors()}), 400
+
+    update_result = db.products.update_one(
+        {"_id": oid}, {"$set": update_data.model_dump(exclude_unset=True)}
+    )
+
+    if update_result.modified_count == 0:
+        return jsonify({"error": "Produto com o id: {product_id} não encontrado"}), 404
+
+    updated_product = db.products.find_one({"_id": oid})
     return jsonify(
-        {"message": "Esta é a rota de atualização do produto de id {product_id}"}
+        ProductDBModel(**updated_product).model_dump(by_alias=True, exclude_none=True)
     )
 
 
 # RF6: O sistema deve permitir a exclusão de um único produto e produto existente
-@main_bp.route("/products/<int:product_id>", methods=["DELETE"])
-def delete_product():
-    return jsonify(
-        {"message": "Esta é a rota de exclusão do produto de id {product_id}"}
-    )
+@main_bp.route("/products/<string:product_id>", methods=["DELETE"])
+@token_required
+def delete_product(token, product_id):
+    try:
+        oid = ObjectId(product_id)
+    except Exception as e:
+        return jsonify({"error": f"Erro ao consultar dados do produto: {e}"})
+
+    delete_product = db.products.delete_one({"_id": oid})
+
+    if delete_product.deleted_count == 0:
+        return jsonify({"error": "Produto com o id: {product_id} não encontrado"}), 404
+
+    return jsonify({"message": "Produto excluído com sucesso!"})
 
 
 # RF7: O sistema deve permitir a importação de vendas através de um arquivo
